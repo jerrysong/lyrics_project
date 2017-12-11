@@ -1,0 +1,6 @@
+LYRICS_TO_ARTISTS_TABLE = 'lyrics_to_artists'
+ARTISTS_WORDS_COUNT_TABLE = 'artists_to_words_count'
+ARTISTS_WORDS_TFIDF_TABLE = 'artists_to_words_tfidf'
+WORDS_COUNT_TABLE = 'words_count'
+TWO_GRAMS_COUNT_TABLE = 'two_grams_count'
+THREE_GRAMS_COUNT_TABLE = 'three_grams_count'

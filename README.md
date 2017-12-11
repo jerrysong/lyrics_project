@@ -14,6 +14,7 @@ Hadoop:
 /usr/local/hadoop/sbin/start-all.sh
 
 HBase:
+/usr/local/hbase/bin/start-hbase.sh
 /usr/local/hbase/bin/hbase-daemon.sh start thrift -p 9090 --infoport 9095
 
 Spark:

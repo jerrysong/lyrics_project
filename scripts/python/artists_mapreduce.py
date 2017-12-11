@@ -1,3 +1,4 @@
+import constants
 import json
 import os
 import pyspark.conf
@@ -12,7 +13,6 @@ HBASE_PORT = CLUSTER_CONFIG['hbaseThriftPort']
 HDFS_PORT = CLUSTER_CONFIG['hdfsMetadataPort']
 
 APP_NAME = 'artists_mapreduce'
-LYRICS_TO_ARTISTS_TABLE = 'lyrics_to_artists'
 
 def load_and_extract(line):
     line_json = json.loads(line.strip())
@@ -26,7 +26,7 @@ def load_and_extract(line):
 
 def bulk_insert(partition):
     connection = happybase.Connection(MASTER_HOST, HBASE_PORT)
-    batch = connection.table(LYRICS_TO_ARTISTS_TABLE).batch(batch_size = 1000)
+    batch = connection.table(constants.LYRICS_TO_ARTISTS_TABLE).batch(batch_size = 1000)
 
     for lyric_id, artist_name in partition:
         data = { 'artists:%s' % (artist_name,) : None }
