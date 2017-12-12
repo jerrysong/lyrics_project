@@ -7,6 +7,7 @@ export HADOOP_HDFS_HOME=$HADOOP_HOME
 export HADOOP_INSTALL=/usr/local/hadoop
 export HADOOP_CONF_DIR=$HADOOP_INSTALL/etc/hadoop
 export YARN_HOME=$HADOOP_HOME
+export YARN_CONF_DIR=$YARN_HOME/etc/hadoop
 export MAVEN_HOME=/usr/local/maven
 export HBASE_HOME=/usr/local/hbase
 export SPARK_HOME=/usr/local/spark

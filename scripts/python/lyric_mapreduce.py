@@ -83,7 +83,10 @@ def compute_word_count(args):
 def bulk_insert_words_to_artists_count(partition, trivial_words):
     batch = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.ARTISTS_WORDS_COUNT_TABLE).batch(batch_size = 1000)
 
-    for artist_name, word_counts_str in partition:
+    for t in partition:
+        if isinstance(t, unicode):
+            t = eval(t)
+        artist_name, word_counts_str = t[0], t[1]
         word_counts = word_counts_str.split(' ')
         count_data = {}
 
@@ -97,7 +100,7 @@ def bulk_insert_words_to_artists_count(partition, trivial_words):
 
         cnt = 0
         for word, count in top_words:
-            if word not in trivial_words:
+            if word[6:] not in trivial_words:
                 count_data['top_10_nontrival_%s' % (word,)] = count
                 cnt += 1
             if cnt == 10:
@@ -108,7 +111,10 @@ def bulk_insert_words_to_artists_count(partition, trivial_words):
 def bulk_insert_words_to_artists_tfidf(partition):
     batch = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.ARTISTS_WORDS_TFIDF_TABLE).batch(batch_size = 1000)
     words_cnt_table = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.WORDS_COUNT_TABLE)
-    for artist_name, word_counts_str in partition:
+    for t in partition:
+        if isinstance(t, unicode):
+            t = eval(t)
+        artist_name, word_counts_str = t[0], t[1]
         word_counts = word_counts_str.split(' ')
         tfidf_data = {}
 
@@ -147,21 +153,30 @@ def main():
                          'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year',
                          'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its',
                          'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new',
-                         'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us'])
+                         'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us', 'is', 'are', 'were', 'was', 'am'])
     shared_trivial_words = sc.broadcast(trivial_words)
 
+    try:
+        words_rdd = sc.textFile('hdfs://%s:%s/resources/norm_words' % (MASTER_HOST, HDFS_PORT))
+        words_rdd.take(1)
+    except Exception, err:
+        words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (MASTER_HOST, HDFS_PORT)) \
+                      .flatMap(flat_map_words) \
+                      .reduceByKey(lambda a, b: a + b)
+        words_rdd.saveAsTextFile('/resources/norm_words')
+        words_rdd.foreachPartition(bulk_insert_words)
 
-    '''words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (MASTER_HOST, HDFS_PORT)) \
-                            .flatMap(flat_map_words) \
-                            .reduceByKey(lambda a, b: a + b) \
-                            .foreachPartition(bulk_insert_words)'''
-
-    lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (MASTER_HOST, HDFS_PORT)) \
-                            .filter(is_valid_record) \
-                            .map(load_and_extract) \
-                            .mapPartitions(map_lyricid_to_artistname) \
-                            .reduceByKey(lambda a, b: '%s %s' % (a, b)) \
-                            .map(compute_word_count)
+    try:
+        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/norm_lyrics' % (MASTER_HOST, HDFS_PORT))
+        lyrics_to_words_rdd.take(1)
+    except Exception, err:
+        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (MASTER_HOST, HDFS_PORT)) \
+                                .filter(is_valid_record) \
+                                .map(load_and_extract) \
+                                .mapPartitions(map_lyricid_to_artistname) \
+                                .reduceByKey(lambda a, b: '%s %s' % (a, b)) \
+                                .map(compute_word_count)
+        lyrics_to_words_rdd.saveAsTextFile('/resources/norm_lyrics')
 
     lyrics_to_words_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value))
     #lyrics_to_words_rdd.foreachPartition(bulk_insert_words_to_artists_tfidf)

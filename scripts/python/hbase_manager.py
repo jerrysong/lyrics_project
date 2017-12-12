@@ -50,7 +50,7 @@ class HBaseManager(object):
     def get_top_10_words_by_artist_name(self, name):
         artist = 'artists:' + name
         table = self.create_artists_to_word_count_table_if_not_exist()
-        return table.row(artist)
+        return table.row(artist, ('top_10_nontrival_words',))
 
 if __name__ == "__main__":
     hbase = HBaseManager()

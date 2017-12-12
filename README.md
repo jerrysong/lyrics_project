@@ -11,6 +11,7 @@ pip install happybase
 pip install pyspark
 pip install flask
 pip install flask-bootstrap
+pip install hdfs
 
 NodeJS:
 npm install -g forever
@@ -27,8 +28,8 @@ Spark:
 /usr/local/spark/sbin/start-all.sh
 
 Run Spark Jobs:
-sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/artists_mapreduce.py -master spark://50.23.83.242:7077 --executor-memory 10G --total-executor-cores 100 1000
-sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/lyric_mapreduce.py -master spark://50.23.83.242:7077 --executor-memory 10G --total-executor-cores 100 1000
+sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/artists_mapreduce.py --master yarn --deploy-mode cluster --executor-memory 16G --total-executor-cores 100
+sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/lyric_mapreduce.py --master yarn --deploy-mode cluster --executor-memory 16G --total-executor-cores 100
 
 Start Web Server:
 forever start -c python /root/lyrics_project/app/server.py

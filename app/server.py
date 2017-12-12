@@ -28,5 +28,11 @@ def send_static(path):
     path, filename = os.path.join(*split_path[:-1]), split_path[-1]
     return flask.send_from_directory(os.path.join('static/vendor', path), filename)
 
+@app.route("/<path:path>")
+def check_artists(path):
+    res = app.hbase.get_top_10_words_by_artist_name(path)
+    sorted_res = sorted(res.iteritems(), key=lambda t:int(t[1]), reverse=True)
+    return str(sorted_res)
+
 if __name__ == "__main__":
     app.run(host=MASTER_HOST, port=WEB_APP_PORT)
