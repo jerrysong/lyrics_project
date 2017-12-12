@@ -13,3 +13,4 @@ export SPARK_HOME=/usr/local/spark
 export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native
 export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$MAVEN_HOME/bin:$HBASE_HOME/bin:$SPARK_HOME/sbin
 export PROD=/root/lyrics_project
+export PYTHONPATH=$PYTHONPATH:$PROD/scripts/python

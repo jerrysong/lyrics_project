@@ -4,10 +4,16 @@ Track favorite words of your favorite artist!
 Dependency:
 Yum:
 yum install python-devel
+yum install nodejs
 
 Python:
 pip install happybase
 pip install pyspark
+pip install flask
+pip install flask-bootstrap
+
+NodeJS:
+npm install -g forever
 
 Start Services:
 Hadoop:
@@ -20,6 +26,9 @@ HBase:
 Spark:
 /usr/local/spark/sbin/start-all.sh
 
-Run Jobs:
-sh /usr/local/spark/bin/spark-submit artists_mapreduce.py -master spark://50.23.83.242:7077 --executor-memory 10G --total-executor-cores 100 1000
-sh /usr/local/spark/bin/spark-submit lyric_mapreduce.py -master spark://50.23.83.242:7077 --executor-memory 10G --total-executor-cores 100 1000
+Run Spark Jobs:
+sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/artists_mapreduce.py -master spark://50.23.83.242:7077 --executor-memory 10G --total-executor-cores 100 1000
+sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/lyric_mapreduce.py -master spark://50.23.83.242:7077 --executor-memory 10G --total-executor-cores 100 1000
+
+Start Web Server:
+forever start -c python /root/lyrics_project/app/server.py

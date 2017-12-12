@@ -63,7 +63,7 @@ def load_and_extract(line):
     return (lyric_id, normalized_words_str)
 
 def map_lyricid_to_artistname(partition):
-    connection = happybase.Connection(MASTER_HOST, HBASE_PORT, timeout=10000000)
+    connection = happybase.Connection(MASTER_HOST, HBASE_PORT)
     table = connection.table(constants.LYRICS_TO_ARTISTS_TABLE)
 
     ret_partition = []
@@ -80,15 +80,8 @@ def compute_word_count(args):
     word_counts_str = ' '.join(word_counts)
     return artist_name, word_counts_str
 
-def bulk_insert_words_to_artists_count(partition):
-    batch = happybase.Connection(MASTER_HOST, HBASE_PORT, timeout=10000000).table(constants.ARTISTS_WORDS_COUNT_TABLE).batch(batch_size = 1000)
-    trivial_words = set(['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as',
-                         'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will',
-                         'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which',
-                         'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year',
-                         'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its',
-                         'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new',
-                         'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us'])
+def bulk_insert_words_to_artists_count(partition, trivial_words):
+    batch = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.ARTISTS_WORDS_COUNT_TABLE).batch(batch_size = 1000)
 
     for artist_name, word_counts_str in partition:
         word_counts = word_counts_str.split(' ')
@@ -113,8 +106,8 @@ def bulk_insert_words_to_artists_count(partition):
         batch.put(artist_name, count_data)
 
 def bulk_insert_words_to_artists_tfidf(partition):
-    batch = happybase.Connection(MASTER_HOST, HBASE_PORT, timeout=10000000).table(constants.ARTISTS_WORDS_TFIDF_TABLE).batch(batch_size = 1000)
-    words_cnt_table = happybase.Connection(MASTER_HOST, HBASE_PORT, timeout=10000000).table(constants.WORDS_COUNT_TABLE)
+    batch = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.ARTISTS_WORDS_TFIDF_TABLE).batch(batch_size = 1000)
+    words_cnt_table = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.WORDS_COUNT_TABLE)
     for artist_name, word_counts_str in partition:
         word_counts = word_counts_str.split(' ')
         tfidf_data = {}
@@ -148,6 +141,16 @@ def main():
     conf = pyspark.conf.SparkConf()
     conf.setAppName(APP_NAME)
     sc = pyspark.context.SparkContext(conf=conf)
+    trivial_words = set(['the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as',
+                         'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will',
+                         'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which',
+                         'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year',
+                         'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its',
+                         'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new',
+                         'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us'])
+    shared_trivial_words = sc.broadcast(trivial_words)
+
+
     '''words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (MASTER_HOST, HDFS_PORT)) \
                             .flatMap(flat_map_words) \
                             .reduceByKey(lambda a, b: a + b) \
@@ -160,8 +163,8 @@ def main():
                             .reduceByKey(lambda a, b: '%s %s' % (a, b)) \
                             .map(compute_word_count)
 
-    lyrics_to_words_rdd.foreachPartition(bulk_insert_words_to_artists_count)
-    lyrics_to_words_rdd.foreachPartition(bulk_insert_words_to_artists_tfidf)
+    lyrics_to_words_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value))
+    #lyrics_to_words_rdd.foreachPartition(bulk_insert_words_to_artists_tfidf)
 
 if __name__ == "__main__":
     main()

@@ -3,5 +3,6 @@
     "slaveHost": "50.23.83.248",
     "hbaseThriftPort": 9090,
     "spartMasterPort": 7077,
-    "hdfsMetadataPort": 8020
+    "hdfsMetadataPort": 8020,
+    "webAppPort": 5000
 }

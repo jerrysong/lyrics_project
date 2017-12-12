@@ -47,6 +47,11 @@ class HBaseManager(object):
             self.connection.create_table(constants.WORDS_COUNT_TABLE, families)
         return self.connection.table(constants.WORDS_COUNT_TABLE)
 
+    def get_top_10_words_by_artist_name(self, name):
+        artist = 'artists:' + name
+        table = self.create_artists_to_word_count_table_if_not_exist()
+        return table.row(artist)
+
 if __name__ == "__main__":
     hbase = HBaseManager()
     hbase.create_lyrics_to_artists_if_not_exist()
