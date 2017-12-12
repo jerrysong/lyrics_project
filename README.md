@@ -29,8 +29,8 @@ Spark:
 /usr/local/spark/sbin/start-all.sh
 
 Run Spark Jobs:
-sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/artists_mapreduce.py --master yarn --deploy-mode cluster --executor-memory 16G --total-executor-cores 100
-sh /usr/local/spark/bin/spark-submit /root/lyrics_project/scripts/python/lyric_mapreduce.py --master yarn --deploy-mode cluster --executor-memory 16G --total-executor-cores 100
+sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/scripts/python/constants.py /root/lyrics_project/scripts/python/artists_mapreduce.py
+sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/scripts/python/constants.py /root/lyrics_project/scripts/python/lyric_mapreduce.py
 
 Start Web Server:
 forever start -c python /root/lyrics_project/app/server.py

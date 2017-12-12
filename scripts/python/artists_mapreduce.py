@@ -5,13 +5,6 @@ import pyspark.conf
 import pyspark.context
 import happybase
 
-PROD_PATH = os.environ.get('PROD')
-CLUSTER_CONFIG_PATH = PROD_PATH + '/conf/cluster_conf.json'
-CLUSTER_CONFIG = json.loads(open(CLUSTER_CONFIG_PATH).read())
-MASTER_HOST = CLUSTER_CONFIG['masterHost']
-HBASE_PORT = CLUSTER_CONFIG['hbaseThriftPort']
-HDFS_PORT = CLUSTER_CONFIG['hdfsMetadataPort']
-
 APP_NAME = 'artists_mapreduce'
 
 def load_and_extract(line):
@@ -25,7 +18,7 @@ def load_and_extract(line):
         return []
 
 def bulk_insert(partition):
-    connection = happybase.Connection(MASTER_HOST, HBASE_PORT)
+    connection = happybase.Connection(constants.MASTER_HOST, constants.HBASE_PORT)
     batch = connection.table(constants.LYRICS_TO_ARTISTS_TABLE).batch(batch_size = 1000)
 
     for lyric_id, artist_name in partition:
@@ -36,7 +29,7 @@ def main():
     conf = pyspark.conf.SparkConf()
     conf.setAppName(APP_NAME)
     sc = pyspark.context.SparkContext(conf=conf)
-    lyrics_to_artists_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_artists.txt' % (MASTER_HOST, HDFS_PORT)) \
+    lyrics_to_artists_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_artists.txt' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
                               .flatMap(load_and_extract) \
                               .foreachPartition(bulk_insert)
 

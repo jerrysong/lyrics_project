@@ -3,15 +3,11 @@ import json
 import happybase
 import os
 
-PROD_PATH = os.environ.get('PROD')
-CLUSTER_CONFIG_PATH = PROD_PATH + '/conf/cluster_conf.json'
-
 class HBaseManager(object):
 
     def __init__(self):
-        cluster_config = json.loads(open(CLUSTER_CONFIG_PATH).read())
-        self.host = cluster_config['masterHost']
-        self.port = cluster_config['hbaseThriftPort']
+        self.host = constants.MASTER_HOST
+        self.port = constants.HBASE_PORT
 
     def create_lyrics_to_artists_if_not_exist(self):
         connection = happybase.Connection(self.host, self.port)
@@ -36,7 +32,8 @@ class HBaseManager(object):
         if not constants.ARTISTS_WORDS_TFIDF_TABLE in connection.tables():
             families = {
                 'words_tf_idf': dict(),
-                'top_10_words_tf_idf': dict()
+                'top_10_words_tf_idf': dict(),
+                'top_10_nontrival_words_tf_idf': dict()
             }
             connection.create_table(constants.ARTISTS_WORDS_TFIDF_TABLE, families)
         return connection.table(constants.ARTISTS_WORDS_TFIDF_TABLE)

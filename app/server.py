@@ -1,14 +1,8 @@
+import constants
 import flask
 import json
 import os
 import hbase_manager
-
-PROD_PATH = os.environ.get('PROD')
-CLUSTER_CONFIG_PATH = PROD_PATH + '/conf/cluster_conf.json'
-CLUSTER_CONFIG = json.loads(open(CLUSTER_CONFIG_PATH).read())
-MASTER_HOST = CLUSTER_CONFIG['masterHost']
-WEB_APP_PORT = CLUSTER_CONFIG['webAppPort']
-HBASE_PORT = CLUSTER_CONFIG['hbaseThriftPort']
 
 class Server(flask.Flask):
 
@@ -40,4 +34,4 @@ def check_artists():
     return str(sorted_res)
 
 if __name__ == '__main__':
-    app.run(host=MASTER_HOST, port=WEB_APP_PORT)
+    app.run(host=constants.MASTER_HOST, port=constants.WEB_APP_PORT)

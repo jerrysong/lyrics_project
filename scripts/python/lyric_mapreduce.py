@@ -9,13 +9,6 @@ import pyspark.conf
 import pyspark.context
 import pyspark.ml.feature
 
-PROD_PATH = os.environ.get('PROD')
-CLUSTER_CONFIG_PATH = PROD_PATH + '/conf/cluster_conf.json'
-CLUSTER_CONFIG = json.loads(open(CLUSTER_CONFIG_PATH).read())
-MASTER_HOST = CLUSTER_CONFIG['masterHost']
-HBASE_PORT = CLUSTER_CONFIG['hbaseThriftPort']
-HDFS_PORT = CLUSTER_CONFIG['hdfsMetadataPort']
-
 APP_NAME = 'lyrics_mapreduce'
 
 def normalize_word(word):
@@ -64,7 +57,7 @@ def load_and_extract(line):
     return (lyric_id, normalized_words_str)
 
 def map_lyricid_to_artistname(partition):
-    connection = happybase.Connection(MASTER_HOST, HBASE_PORT)
+    connection = happybase.Connection(constants.MASTER_HOST, constants.HBASE_PORT)
     table = connection.table(constants.LYRICS_TO_ARTISTS_TABLE)
 
     ret_partition = []
@@ -81,27 +74,39 @@ def compute_word_count(args):
     word_counts_str = ' '.join(word_counts)
     return artist_name, word_counts_str
 
-def bulk_insert_words_to_artists_count(partition, trivial_words):
-    batch = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.ARTISTS_WORDS_COUNT_TABLE).batch(batch_size = 1000)
+def flat_map_to_word_count(args):
+    artist_name, word_counts_str = args
+    word_counts = word_counts_str.split(' ')
+    ret = []
 
-    for t in partition:
-        if isinstance(t, unicode):
-            t = eval(t)
-        artist_name, word_counts_str = t[0], t[1]
+    for i in xrange(0, len(word_counts), 2):
+        word, count = word_counts[i], word_counts[i+1]
+        ret.append((word, (artist_name, count)))
+    return ret
+
+def word_count_map_to_tfidf(args):
+    word, artist, count, total_count = args[0], args[1][0][0], args[1][0][1], args[1][1]
+    tfidf = float(count) / float(total_count) * 1000000
+    return (artist, '%s %s' % (word, tfidf))
+
+def bulk_insert_words_to_artists_count(partition, trivial_words, column_prefix, table_name):
+    batch = happybase.Connection(constants.MASTER_HOST, constants.HBASE_PORT).table(table_name).batch(batch_size = 1000)
+
+    for artist_name, word_counts_str in partition:
         word_counts = word_counts_str.split(' ')
         count_data = {}
 
         for i in xrange(0, len(word_counts), 2):
             word, count = word_counts[i], word_counts[i+1]
-            count_data['words:%s' % (word,)] = count
+            count_data['%s:%s' % (column_prefix, word)] = count
 
-        top_words = heapq.nlargest(110, count_data.iteritems(), key=lambda t:int(t[1]))
+        top_words = heapq.nlargest(110, count_data.iteritems(), key=lambda t:float(t[1]))
         for word, count in top_words[:10]:
             count_data['top_10_%s' % (word,)] = count
 
         cnt = 0
         for word, count in top_words:
-            if word[6:] not in trivial_words:
+            if word.split(':')[1] not in trivial_words:
                 count_data['top_10_nontrival_%s' % (word,)] = count
                 cnt += 1
             if cnt == 10:
@@ -109,36 +114,8 @@ def bulk_insert_words_to_artists_count(partition, trivial_words):
 
         batch.put(artist_name, count_data)
 
-def bulk_insert_words_to_artists_tfidf(partition):
-    batch = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.ARTISTS_WORDS_TFIDF_TABLE).batch(batch_size = 1000)
-    words_cnt_table = happybase.Connection(MASTER_HOST, HBASE_PORT).table(constants.WORDS_COUNT_TABLE)
-    for t in partition:
-        if isinstance(t, unicode):
-            t = eval(t)
-        artist_name, word_counts_str = t[0], t[1]
-        word_counts = word_counts_str.split(' ')
-        tfidf_data = {}
-
-        for i in xrange(0, len(word_counts), 2):
-            word, count = word_counts[i], word_counts[i+1]
-            if not word:
-                continue
-
-            row = words_cnt_table.row(word)
-            corpus_count = row.get('counts:count')
-            if corpus_count:
-                tfidf = float(count) / float(corpus_count) * 1000000
-                tfidf_data['words_tf_idf:%s' % (word,)] = int(tfidf)
-
-        top_10_words_tf_idf = heapq.nlargest(10, tfidf_data.iteritems(), key=lambda t:t[1])
-        for word, tfidf in top_10_words_tf_idf:
-            tfidf_data['top_10_%s' % (word,)] = tfidf
-
-        tfidf_data = {key:str(value) for key, value in tfidf_data.iteritems()}
-        batch.put(artist_name, tfidf_data)
-
-def bulk_insert_words(partition):
-    connection = happybase.Connection(MASTER_HOST, HBASE_PORT)
+def bulk_insert_words_to_words_count(partition):
+    connection = happybase.Connection(constants.MASTER_HOST, constants.HBASE_PORT)
     batch = connection.table(constants.WORDS_COUNT_TABLE).batch(batch_size = 1000)
     for word, count in partition:
         data = { 'counts:count' : str(count) }
@@ -154,29 +131,38 @@ def main():
     shared_trivial_words = sc.broadcast(trivial_words)
 
     try:
-        words_rdd = sc.textFile('hdfs://%s:%s/resources/norm_words' % (MASTER_HOST, HDFS_PORT))
-        words_rdd.take(1)
+        words_count_rdd = sc.textFile('hdfs://%s:%s/resources/norm_words' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
+                      .map(lambda line: eval(line))
     except Exception, err:
-        words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (MASTER_HOST, HDFS_PORT)) \
+        words_count_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
                       .flatMap(flat_map_words) \
                       .reduceByKey(lambda a, b: a + b)
-        words_rdd.saveAsTextFile('/resources/norm_words')
-        words_rdd.foreachPartition(bulk_insert_words)
+        words_count_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_words' % (constants.MASTER_HOST, constants.HDFS_PORT))
+        words_count_rdd.foreachPartition(bulk_insert_words_to_words_count)
 
     try:
-        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/norm_lyrics' % (MASTER_HOST, HDFS_PORT))
-        lyrics_to_words_rdd.take(1)
+        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/norm_lyrics' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
+                                .map(lambda line: eval(line))
     except Exception, err:
-        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (MASTER_HOST, HDFS_PORT)) \
+        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
                                 .filter(is_valid_record) \
                                 .map(load_and_extract) \
                                 .mapPartitions(map_lyricid_to_artistname) \
                                 .reduceByKey(lambda a, b: '%s %s' % (a, b)) \
                                 .map(compute_word_count)
-        lyrics_to_words_rdd.saveAsTextFile('/resources/norm_lyrics')
+        lyrics_to_words_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_lyrics' % (constants.MASTER_HOST, constants.HDFS_PORT))
+        lyrics_to_words_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words', constants.ARTISTS_WORDS_COUNT_TABLE))
 
-    lyrics_to_words_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value))
-    #lyrics_to_words_rdd.foreachPartition(bulk_insert_words_to_artists_tfidf)
+    try:
+        tfidf_rdd = sc.textFile('hdfs://%s:%s/resources/norm_tfidf' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
+                                .map(lambda line: eval(line))
+    except Exception, err:
+        tfidf_rdd = lyrics_to_words_rdd.flatMap(flat_map_to_word_count) \
+                                       .join(words_count_rdd) \
+                                       .map(word_count_map_to_tfidf) \
+                                       .reduceByKey(lambda a, b: '%s %s' % (a, b))
+        tfidf_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_tfidf' % (constants.MASTER_HOST, constants.HDFS_PORT))
+        tfidf_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words_tf_idf', constants.ARTISTS_WORDS_TFIDF_TABLE))
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
