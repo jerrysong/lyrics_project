@@ -18,21 +18,26 @@ class Server(flask.Flask):
 
 app = Server('Lyrics Web App')
 
-@app.route("/")
+@app.route('/')
 def hello():
     return flask.render_template('index.html')
 
-@app.route('/vendor/<path:path>')
+@app.route('/<path:path>')
 def send_static(path):
     split_path = path.split('/')
     path, filename = os.path.join(*split_path[:-1]), split_path[-1]
-    return flask.send_from_directory(os.path.join('static/vendor', path), filename)
+    return flask.send_from_directory(os.path.join('static', path), filename)
 
-@app.route("/<path:path>")
-def check_artists(path):
-    res = app.hbase.get_top_10_words_by_artist_name(path)
+@app.route('/check', methods=['POST'])
+def check_artists():
+    artist = flask.request.get_json(force=True).get('artist')
+    if not artist:
+        return ''
+
+    artist = artist.lower()
+    res = app.hbase.get_top_10_words_by_artist_name(artist)
     sorted_res = sorted(res.iteritems(), key=lambda t:int(t[1]), reverse=True)
     return str(sorted_res)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(host=MASTER_HOST, port=WEB_APP_PORT)
