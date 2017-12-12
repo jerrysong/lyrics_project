@@ -12,6 +12,7 @@ pip install pyspark
 pip install flask
 pip install flask-bootstrap
 pip install hdfs
+pip install numpy
 
 NodeJS:
 npm install -g forever
