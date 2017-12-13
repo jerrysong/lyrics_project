@@ -47,10 +47,19 @@ class HBaseManager(object):
             connection.create_table(constants.WORDS_COUNT_TABLE, families)
         return connection.table(constants.WORDS_COUNT_TABLE)
 
-    def get_top_10_words_by_artist_name(self, name):
+    def get_top_10_by_cnt_by_artist_name(self, name):
         artist = 'artists:' + name
         table = self.create_artists_to_word_count_table_if_not_exist()
-        return table.row(artist, ('top_10_nontrival_words',))
+        ret = table.row(artist, ('top_10_nontrival_words',))
+        ret = { key.split(':', 1)[1]:value for key, value in ret.iteritems() }
+        return ret
+
+    def get_top_10_by_tfidf_by_artist_name(self, name):
+        artist = 'artists:' + name
+        table = self.create_artists_to_word_tfidf_table_if_not_exist()
+        ret = table.row(artist, ('top_10_nontrival_words_tf_idf',))
+        ret = { key.split(':', 1)[1]:value for key, value in ret.iteritems() }
+        return ret
 
 if __name__ == "__main__":
     hbase = HBaseManager()

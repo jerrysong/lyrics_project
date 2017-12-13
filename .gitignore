@@ -1,4 +1,5 @@
 resources/data/*
+log/*
 *.pyc
 *.swp
 app/templates/static/vendor/*

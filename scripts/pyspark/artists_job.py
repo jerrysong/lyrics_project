@@ -5,7 +5,7 @@ import pyspark.conf
 import pyspark.context
 import happybase
 
-APP_NAME = 'artists_mapreduce'
+APP_NAME = 'artists_job'
 
 def load_and_extract(line):
     line_json = json.loads(line.strip())

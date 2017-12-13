@@ -9,7 +9,7 @@ import pyspark.conf
 import pyspark.context
 import pyspark.ml.feature
 
-APP_NAME = 'lyrics_mapreduce'
+APP_NAME = 'lyrics_job'
 
 def normalize_word(word):
     word = word.lower()
@@ -86,7 +86,8 @@ def flat_map_to_word_count(args):
 
 def word_count_map_to_tfidf(args):
     word, artist, count, total_count = args[0], args[1][0][0], args[1][0][1], args[1][1]
-    tfidf = float(count) / float(total_count) * 1000000
+    tfidf_factor, threshold = 1000000, 5
+    tfidf = 0.0 if int(count) < threshold else float(count) / float(total_count) * tfidf_factor
     return (artist, '%s %s' % (word, tfidf))
 
 def bulk_insert_words_to_artists_count(partition, trivial_words, column_prefix, table_name):

@@ -10,8 +10,7 @@ Python:
 pip install happybase
 pip install pyspark
 pip install flask
-pip install flask-bootstrap
-pip install hdfs
+pip install raven
 pip install numpy
 
 NodeJS:
@@ -29,8 +28,8 @@ Spark:
 /usr/local/spark/sbin/start-all.sh
 
 Run Spark Jobs:
-sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/scripts/python/constants.py /root/lyrics_project/scripts/python/artists_mapreduce.py
-sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/scripts/python/constants.py /root/lyrics_project/scripts/python/lyric_mapreduce.py
+sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/artists_job.py
+sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/lyrics_job.py
 
 Start Web Server:
 forever start -c python /root/lyrics_project/app/server.py
