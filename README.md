@@ -26,9 +26,9 @@ Please install following software before you proceed.
     
 ## Build the Cluster
 Please refer to the official documentation of Hadoop, Spark and Hbase regarding how to build a cluster. This project uses the latest version of them. Please install them in `/usr/local` directory.
-To start the cluster, run following scripts.
+To start the cluster, run following scripts:
 
-    /usr/local/hadoop/sbin/start-all.sh
+    /usr/local/hadoop/sbin/start-all.sh
     /usr/local/hbase/bin/start-hbase.sh
     /usr/local/hbase/bin/hbase-daemon.sh start thrift -p 9090 --infoport 9095
     /usr/local/spark/sbin/start-all.sh
