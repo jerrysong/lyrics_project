@@ -16,11 +16,11 @@ app = Server('Lyrics Web App')
 def hello():
     return flask.render_template('index.html')
 
-@app.route('/<path:path>')
+@app.route('/static/<path:path>')
 def send_static(path):
     split_path = path.split('/')
     path, filename = os.path.join(*split_path[:-1]), split_path[-1]
-    return flask.send_from_directory(os.path.join('static', path), filename)
+    return flask.send_from_directory(path, filename)
 
 @app.route('/check', methods=['POST'])
 def check_artists():
