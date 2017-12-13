@@ -132,11 +132,11 @@ def main():
 
     try:
         words_count_rdd = sc.textFile('hdfs://%s:%s/resources/norm_words' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
-                      .map(lambda line: eval(line))
+                            .map(lambda line: eval(line))
     except Exception, err:
         words_count_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
-                      .flatMap(flat_map_words) \
-                      .reduceByKey(lambda a, b: a + b)
+                            .flatMap(flat_map_words) \
+                            .reduceByKey(lambda a, b: a + b)
         words_count_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_words' % (constants.MASTER_HOST, constants.HDFS_PORT))
         words_count_rdd.foreachPartition(bulk_insert_words_to_words_count)
 
@@ -155,7 +155,7 @@ def main():
 
     try:
         tfidf_rdd = sc.textFile('hdfs://%s:%s/resources/norm_tfidf' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
-                                .map(lambda line: eval(line))
+                      .map(lambda line: eval(line))
     except Exception, err:
         tfidf_rdd = lyrics_to_words_rdd.flatMap(flat_map_to_word_count) \
                                        .join(words_count_rdd) \
