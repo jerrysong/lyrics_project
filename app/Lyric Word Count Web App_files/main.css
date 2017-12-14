@@ -1,0 +1,17 @@
+.top-buffer {
+    margin-top:50px;
+}
+
+p.intro-note {
+    color: #D3D3D3;
+    font-size: 14px;
+}
+
+.intro-heading {
+    font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 60px;
+    line-height: 50px;
+    margin-bottom: 25px;
+}
