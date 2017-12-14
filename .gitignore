@@ -1,4 +1,4 @@
-resources/data/*
+data/*
 log/*
 *.pyc
 *.swp

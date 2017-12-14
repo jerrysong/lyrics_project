@@ -18,7 +18,7 @@ def load_and_extract(line):
         return []
 
 def bulk_insert(partition):
-    connection = happybase.Connection(constants.MASTER_HOST, constants.HBASE_PORT)
+    connection = happybase.Connection(constants.HBASE_THRIFT_HOST, constants.HBASE_PORT)
     batch = connection.table(constants.LYRICS_TO_ARTISTS_TABLE).batch(batch_size = 1000)
 
     for lyric_id, artist_name in partition:
@@ -29,7 +29,7 @@ def main():
     conf = pyspark.conf.SparkConf()
     conf.setAppName(APP_NAME)
     sc = pyspark.context.SparkContext(conf=conf)
-    lyrics_to_artists_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_artists.txt' % (constants.MASTER_HOST, constants.HDFS_PORT)) \
+    lyrics_to_artists_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_artists.txt' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT)) \
                               .flatMap(load_and_extract) \
                               .foreachPartition(bulk_insert)
 

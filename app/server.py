@@ -36,7 +36,10 @@ def get_top_words_by_artist():
         'top_10_by_cnt': dict(top_10_by_cnt),
         'top_10_by_tfidf': dict(top_10_by_tfidf)
     }
-    return flask.jsonify(ret_json)
+
+    resp = flask.make_response(flask.jsonify(ret_json))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
 
 if __name__ == '__main__':
-    app.run(host=constants.MASTER_HOST, port=constants.WEB_APP_PORT)
+    app.run(host=constants.WEB_APP_HOST, port=constants.WEB_APP_PORT)

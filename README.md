@@ -23,7 +23,7 @@ Please install following software before you proceed.
     pip install numpy
 
     npm install -g forever
-    
+
 ## Build the Cluster
 Please refer to the official documentation of Hadoop, Spark and Hbase regarding how to build a cluster. This project uses the latest version of them. Please install them in `/usr/local` directory.
 To start the cluster, run following scripts:
@@ -32,12 +32,12 @@ To start the cluster, run following scripts:
     /usr/local/hbase/bin/start-hbase.sh
     /usr/local/hbase/bin/hbase-daemon.sh start thrift -p 9090 --infoport 9095
     /usr/local/spark/sbin/start-all.sh
-    
+
 ## Run Spark Jobs
 Before running spark jobs, please download raw data from s3://w251lyrics-project/lyric.json.gz and s3://w251lyrics-project/full_US.json.gz. Save them to HDFS `/resources/raw_data` directory as `raw_lyrics.txt` and `raw_artists.txt` respectively.
 
-    sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/artists_job.py
-    sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 4 --executor-memory 3G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/lyrics_job.py
+    sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 9 --executor-memory 8G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/artists_job.py
+    sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 12 --executor-memory 6G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/lyrics_job.py
 
 ## Start Web Server:
 Please checkout this project from github and cd to the `lyrics_project/app` directory. Start the web server in background.

@@ -1,6 +1,6 @@
 "use strict";
 
-const BACKEND_END_POINT = "http://50.23.83.242:80/get_top_words_by_artist";
+const BACKEND_END_POINT = "http://50.23.83.252:80/get_top_words_by_artist";
 
 $(function() {
     $("#search-btn").on("click", function() {

@@ -6,7 +6,7 @@ import os
 class HBaseManager(object):
 
     def __init__(self):
-        self.host = constants.MASTER_HOST
+        self.host = constants.HBASE_THRIFT_HOST
         self.port = constants.HBASE_PORT
 
     def get_lyrics_to_artists_table(self):
@@ -53,14 +53,14 @@ class HBaseManager(object):
 
     def get_top_10_by_cnt_by_artist_name(self, name):
         artist = 'artists:' + name
-        table = self.get_artists_to_word_count_table()
+        table = self.get_artists_to_word_count_table('artists_to_words_count')
         ret = table.row(artist, ('top_10_nontrival_words',))
         ret = { key.split(':', 1)[1]:value for key, value in ret.iteritems() }
         return ret
 
     def get_top_10_by_tfidf_by_artist_name(self, name):
         artist = 'artists:' + name
-        table = self.get_artists_to_word_count_table()
+        table = self.get_artists_to_word_count_table('artists_to_words_count')
         ret = table.row(artist, ('top_10_nontrival_words_tf_idf',))
         ret = { key.split(':', 1)[1]:value for key, value in ret.iteritems() }
         return ret
