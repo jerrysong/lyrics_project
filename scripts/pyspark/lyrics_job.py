@@ -158,8 +158,10 @@ def bulk_insert_words_to_artists_count(partition, trivial_words, column_prefix, 
         batch.put(artist_name, count_data)
 
 def bulk_insert_words_to_words_count(partition):
+    """ This function inserts the corpus count of each word to the Hbase database.
+    """
     connection = happybase.Connection(constants.HBASE_THRIFT_HOST, constants.HBASE_PORT)
-    batch = connection.table(constants.WORDS_COUNT_TABLE).batch(batch_size = 1000)
+    batch = connection.table(constants.SINGLE_WORD_CORPUS_WORDS_COUNT_TABLE).batch(batch_size = 1000)
     for word, count in partition:
         data = { 'counts' : str(count) }
         batch.put(word, data)
@@ -174,32 +176,32 @@ def main():
     shared_trivial_words = sc.broadcast(trivial_words)
 
     try:
-        words_count_rdd = sc.textFile('hdfs://%s:%s/resources/norm_words' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT)) \
+        words_count_rdd = sc.textFile(constants.SINGLE_WORD_NORM_WORDS_COUNT_HDFS_PATH) \
                             .map(lambda line: eval(line))
         words_count_rdd.take(1)
     except Exception, err:
-        words_count_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT)) \
+        words_count_rdd = sc.textFile(constants.RAW_LYRICS_HDFS_PATH) \
                             .flatMap(flat_map_words) \
                             .reduceByKey(lambda a, b: a + b)
-        words_count_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_words' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT))
-        words_count_rdd.foreachPartition(bulk_insert_words_to_words_count)
+        words_count_rdd.saveAsTextFile(constants.SINGLE_WORD_NORM_WORDS_COUNT_HDFS_PATH)
+    words_count_rdd.foreachPartition(bulk_insert_words_to_words_count)
 
     try:
-        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/norm_lyrics' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT)) \
+        lyrics_to_words_rdd = sc.textFile(constants.SINGLE_WORD_NORM_ARTISTS_WORDS_COUNT_HDFS_PATH) \
                                 .map(lambda line: eval(line))
         lyrics_to_words_rdd.take(1)
     except Exception, err:
-        lyrics_to_words_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_lyrics.txt' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT)) \
+        lyrics_to_words_rdd = sc.textFile(constants.RAW_LYRICS_HDFS_PATH) \
                                 .filter(is_valid_record) \
                                 .map(load_and_extract) \
                                 .mapPartitions(map_lyricid_to_artistname) \
                                 .reduceByKey(lambda a, b: a + b) \
                                 .map(compute_word_count)
-        lyrics_to_words_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_lyrics' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT))
-        lyrics_to_words_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words', constants.ARTISTS_WORDS_COUNT_TABLE))
+        lyrics_to_words_rdd.saveAsTextFile(constants.SINGLE_WORD_NORM_ARTISTS_WORDS_COUNT_HDFS_PATH)
+    lyrics_to_words_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words', constants.SINGLE_WORD_ARTISTS_WORDS_COUNT_TABLE))
 
     try:
-        tfidf_rdd = sc.textFile('hdfs://%s:%s/resources/norm_tfidf' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT)) \
+        tfidf_rdd = sc.textFile(constants.SINGLE_WORD_NORM_ARTISTS_WORDS_TFIDF_HDFS_PATH) \
                       .map(lambda line: eval(line))
         tfidf_rdd.take(1)
     except Exception, err:
@@ -207,8 +209,8 @@ def main():
                                        .join(words_count_rdd) \
                                        .map(word_count_map_to_tfidf) \
                                        .reduceByKey(lambda a, b: a + b)
-        tfidf_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_tfidf' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT))
-    tfidf_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words_tf_idf', constants.ARTISTS_WORDS_COUNT_TABLE))
+        tfidf_rdd.saveAsTextFile(constants.SINGLE_WORD_NORM_ARTISTS_WORDS_TFIDF_HDFS_PATH)
+    tfidf_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words_tf_idf', constants.SINGLE_WORD_ARTISTS_WORDS_COUNT_TABLE))
 
 if __name__ == '__main__':
     main()

@@ -29,7 +29,7 @@ def main():
     conf = pyspark.conf.SparkConf()
     conf.setAppName(APP_NAME)
     sc = pyspark.context.SparkContext(conf=conf)
-    lyrics_to_artists_rdd = sc.textFile('hdfs://%s:%s/resources/raw_data/raw_artists.txt' % (constants.HADOOP_MASTER_HOST, constants.HDFS_PORT)) \
+    lyrics_to_artists_rdd = sc.textFile(constants.RAW_ARTISTS_HDFS_PATH) \
                               .flatMap(load_and_extract) \
                               .foreachPartition(bulk_insert)
 
