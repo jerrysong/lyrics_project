@@ -12,6 +12,11 @@ import pyspark.ml.feature
 APP_NAME = 'lyrics_job'
 
 def normalize_word(word):
+    """ This function normalizes a single word.
+
+    It transforms all letters to lowercase, and strip leading and trailing
+    non-alphanumeric characters.
+    """
     word = word.lower()
     left = 0
     while left < len(word) and not word[left].isalpha():
@@ -23,6 +28,12 @@ def normalize_word(word):
     return word[left:right+1]
 
 def flat_map_words(line):
+    """ This functions takes a JSON string and returns a flat list of key-value pairs.
+
+    This function extracts the lyric text from the JSON object. Split the lyric text
+    into a list of words and normalize them. Count the occurence of each word.
+    Lastly, return a list of (word, count) pairs.
+    """
     line_json = json.loads(line.strip())
     lyric_id, lyric_text = line_json['lyricid'], line_json['lyrics']
     words = re.split('\n| ', lyric_text)
@@ -35,6 +46,11 @@ def flat_map_words(line):
     return normalized_words.items()
 
 def is_valid_record(line):
+    """ Validate the input line.
+
+    The input is valid only if it can be serialized into a JSON object and contains
+    the expected keys.
+    """
     line_json = None
     try:
         line_json = json.loads(line.strip())
@@ -43,6 +59,11 @@ def is_valid_record(line):
     return 'lyricid' in line_json and 'lyrics' in line_json
 
 def load_and_extract(line, ngram=1):
+    """ This function takes a JSON string and return a key-value pair.
+
+    The returned key is the lyric id while the returned value is a list of ngram-word.
+    The "n" here can be 1, 2 or 3.
+    """
     line_json = json.loads(line.strip())
     lyric_id, lyric_text = line_json['lyricid'], line_json['lyrics']
     words = re.split('\n| ', lyric_text)
@@ -58,7 +79,43 @@ def load_and_extract(line, ngram=1):
     else:
         return (lyric_id, [tuple(lyric_text[i:i+ngram]) for i in xrange(len(lyric_text)+1-ngram)])
 
+def compute_word_count(args):
+    """ This function maps each (artist, list of word) pair to (artist, list of (word, count)) pair.
+    """
+    artist_name, lyric_text = args
+    word_counter = collections.Counter(lyric_text)
+    return (artist_name, word_counter.items())
+
+def flat_map_to_word_count(args):
+    """ This function maps each (artist, list of (word, count)) pair to multiple (word, (artist, count)) pairs.
+    """
+    artist_name, word_counts = args
+    ret = []
+
+    for word, count in word_counts:
+        ret.append((word, (artist_name, count)))
+    return ret
+
+def word_count_map_to_tfidf(args):
+    """ This function maps a word's count to its term frequency-inverse document frequency.
+
+    Two special rules apply here: If the corpus count of a word is less than 10, or the local
+    count of a word is equivalent to its corpus count, then the tf-idf will be zero instead.
+    """
+    word, artist, count, total_count = args[0], args[1][0][0], args[1][0][1], args[1][1]
+    tfidf_factor, threshold = 1000000, 10
+    tfidf = 0.0 if (total_count < threshold or count == total_count) else (float(count) / float(total_count) * tfidf_factor)
+    return (artist, [(word, tfidf)])
+
 def map_lyricid_to_artistname(partition):
+    """ This function works on a RDD partition with lyric id-lyric text pairs and
+    transform it to artist name-lyric text pairs.
+
+    One lyric id can be mapped to multiple artist names. This function queries the
+    Hbase database to fetech all artist names associated with the given lyric id.
+    The expensive Hbase connection cost is offset by reusing one Hbase connection
+    in each partition.
+    """
     connection = happybase.Connection(constants.MASTER_HOST, constants.HBASE_PORT)
     table = connection.table(constants.LYRICS_TO_ARTISTS_TABLE)
 
@@ -69,26 +126,17 @@ def map_lyricid_to_artistname(partition):
 
     return iter(ret_partition)
 
-def compute_word_count(args):
-    artist_name, lyric_text = args
-    word_counter = collections.Counter(lyric_text)
-    return (artist_name, word_counter.items())
-
-def flat_map_to_word_count(args):
-    artist_name, word_counts = args
-    ret = []
-
-    for word, count in word_counts:
-        ret.append((word, (artist_name, count)))
-    return ret
-
-def word_count_map_to_tfidf(args):
-    word, artist, count, total_count = args[0], args[1][0][0], args[1][0][1], args[1][1]
-    tfidf_factor, threshold = 1000000, 10
-    tfidf = 0.0 if count < threshold else float(count) / float(total_count) * tfidf_factor
-    return (artist, word, tfidf)
-
 def bulk_insert_words_to_artists_count(partition, trivial_words, column_prefix, table_name):
+    """ This function batch insert all (artist, list of (word, count / tfidf)) pairs in
+    one partition to the Hbase database.
+
+    A word in this context can be a single word, a 2-gram word tuple or a 3-gram word tuple. Each
+    Hbase table contains six column families: column family with all words' count, column family
+    with all words' tfidf, column family with top 10 frequent words' count, column family with
+    top 10 frequent words' tfidf, column family with top 10 nontrival frequent words' count,
+    column family with top 10 frequent nontrival words' tfidf. A word is considered trival if it
+    is found in a predefined trival words set.
+    """
     batch = happybase.Connection(constants.MASTER_HOST, constants.HBASE_PORT).table(table_name).batch(batch_size = 1000)
 
     for artist_name, word_counts in partition:
@@ -106,6 +154,7 @@ def bulk_insert_words_to_artists_count(partition, trivial_words, column_prefix, 
             if cnt == 10:
                 break
 
+        count_data = { key:str(value) for key, value in count_data.iteritems() }
         batch.put(artist_name, count_data)
 
 def bulk_insert_words_to_words_count(partition):
@@ -159,7 +208,7 @@ def main():
                                        .map(word_count_map_to_tfidf) \
                                        .reduceByKey(lambda a, b: a + b)
         tfidf_rdd.saveAsTextFile('hdfs://%s:%s/resources/norm_tfidf' % (constants.MASTER_HOST, constants.HDFS_PORT))
-        tfidf_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words_tf_idf', constants.ARTISTS_WORDS_TFIDF_TABLE))
+    tfidf_rdd.foreachPartition(lambda partition: bulk_insert_words_to_artists_count(partition, shared_trivial_words.value, 'words_tf_idf', constants.ARTISTS_WORDS_COUNT_TABLE))
 
 if __name__ == '__main__':
     main()
