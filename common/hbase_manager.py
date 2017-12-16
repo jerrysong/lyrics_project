@@ -40,16 +40,16 @@ class HBaseManager(object):
         return connection.table(table)
 
     def create_word_count_tables(self):
-        hbase.get_artists_to_word_count_table(constants.ARTISTS_WORDS_COUNT_TABLE)
-        hbase.get_word_count_table(constants.WORDS_COUNT_TABLE)
+        hbase.get_artists_to_word_count_table(constants.SINGLE_WORD_ARTISTS_WORDS_COUNT_TABLE)
+        hbase.get_word_count_table(constants.SINGLE_WORD_CORPUS_WORDS_COUNT_TABLE)
 
     def create_two_gram_count_table(self):
         hbase.get_artists_to_word_count_table(constants.TWO_GRAM_ARTISTS_WORDS_COUNT_TABLE)
-        hbase.get_word_count_table(constants.TWO_GRAM_WORDS_COUNT_TABLE)
+        hbase.get_word_count_table(constants.TWO_GRAM_CORPUS_WORDS_COUNT_TABLE)
 
     def create_three_gram_count_table(self):
         hbase.get_artists_to_word_count_table(constants.THREE_GRAM_ARTISTS_WORDS_COUNT_TABLE)
-        hbase.get_word_count_table(constants.THREE_GRAM_WORDS_COUNT_TABLE)
+        hbase.get_word_count_table(constants.THREE_GRAM_CORPUS_WORDS_COUNT_TABLE)
 
     def get_top_10_by_cnt_by_artist_name(self, name):
         artist = 'artists:' + name

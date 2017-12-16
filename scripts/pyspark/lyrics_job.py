@@ -163,7 +163,7 @@ def bulk_insert_words_to_words_count(partition):
     connection = happybase.Connection(constants.HBASE_THRIFT_HOST, constants.HBASE_PORT)
     batch = connection.table(constants.SINGLE_WORD_CORPUS_WORDS_COUNT_TABLE).batch(batch_size = 1000)
     for word, count in partition:
-        data = { 'counts' : str(count) }
+        data = { 'counts:count' : str(count) }
         batch.put(word, data)
 
 def main():
