@@ -30,12 +30,7 @@ def get_top_words_by_artist():
         return flask.jsonify({})
 
     artist = artist.lower()
-    top_10_by_cnt = app.hbase.get_top_10_by_cnt_by_artist_name(artist)
-    top_10_by_tfidf = app.hbase.get_top_10_by_tfidf_by_artist_name(artist)
-    ret_json = {
-        'top_10_by_cnt': dict(top_10_by_cnt),
-        'top_10_by_tfidf': dict(top_10_by_tfidf)
-    }
+    ret_json = app.hbase.get_top_10_by_cnt_by_artist_name(artist)
 
     resp = flask.make_response(flask.jsonify(ret_json))
     resp.headers['Access-Control-Allow-Origin'] = '*'

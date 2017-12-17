@@ -51,16 +51,26 @@ class HBaseManager(object):
 
     def get_top_10_by_cnt_by_artist_name(self, name):
         artist = 'artists:' + name
-        table = self.get_artists_to_word_count_table('artists_to_words_count')
-        ret = table.row(artist, ('top_10_nontrival_words',))
-        ret = { key.split(':', 1)[1]:value for key, value in ret.iteritems() }
-        return ret
 
-    def get_top_10_by_tfidf_by_artist_name(self, name):
-        artist = 'artists:' + name
-        table = self.get_artists_to_word_count_table('artists_to_words_count')
-        ret = table.row(artist, ('top_10_nontrival_words_tf_idf',))
-        ret = { key.split(':', 1)[1]:value for key, value in ret.iteritems() }
+        single_word_table = self.get_artists_to_word_count_table(constants.SINGLE_WORD_ARTISTS_WORDS_COUNT_TABLE)
+        top_10_nontrival_words = single_word_table.row(artist, ('top_10_nontrival_words',))
+        top_10_nontrival_words = { key.split(':', 1)[1]:value for key, value in top_10_nontrival_words.iteritems() }
+        top_10_nontrival_words_tf_idf = single_word_table.row(artist, ('top_10_nontrival_words_tf_idf',))
+        top_10_nontrival_words_tf_idf = { key.split(':', 1)[1]:value for key, value in top_10_nontrival_words_tf_idf.iteritems() }
+
+        two_gram_word_table = self.get_artists_to_word_count_table(constants.TWO_GRAM_ARTISTS_WORDS_COUNT_TABLE)
+        top_10_nontrival_two_gram_words = two_gram_word_table.row(artist, ('top_10_nontrival_words',))
+        top_10_nontrival_two_gram_words = { key.split(':', 1)[1]:value for key, value in top_10_nontrival_two_gram_words.iteritems() }
+        top_10_nontrival_two_gram_words_tf_idf = two_gram_word_table.row(artist, ('top_10_nontrival_words_tf_idf',))
+        top_10_nontrival_two_gram_words_tf_idf = { key.split(':', 1)[1]:value for key, value in top_10_nontrival_two_gram_words_tf_idf.iteritems() }
+
+        ret = {
+            'top_single_word': top_10_nontrival_words,
+            'top_single_word_tfidf': top_10_nontrival_words_tf_idf,
+            'top_two_gram_word': top_10_nontrival_two_gram_words,
+            'top_two_gram_word_tfidf': top_10_nontrival_two_gram_words_tf_idf
+        }
+
         return ret
 
 if __name__ == "__main__":
