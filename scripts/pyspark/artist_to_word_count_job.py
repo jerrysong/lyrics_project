@@ -14,7 +14,7 @@ def emit_lyricid_word_pairs(line, ngram):
     """ This function takes a JSON string and return a key-value pair.
 
     The returned key is the lyric id while the returned value is a list of ngram-word.
-    The "n" here can be 1, 2 or 3.
+    The "n" here can be 1 or 2.
     """
     line_json = json.loads(line.strip())
     lyric_id, lyric_text = line_json['lyricid'], line_json['lyrics']

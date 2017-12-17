@@ -1,3 +1,13 @@
+body {
+    padding-top: 54px;
+}
+
+@media (min-width: 992px) {
+    body {
+        padding-top: 56px;
+    }
+}
+
 .top-buffer {
     margin-top:50px;
 }
@@ -8,10 +18,10 @@ p.intro-note {
 }
 
 .intro-heading {
-    font-family: "Montserrat", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Lobster", serif;
     text-transform: uppercase;
     font-weight: 700;
-    font-size: 60px;
+    font-size: 50px;
     line-height: 50px;
     margin-bottom: 25px;
 }

@@ -13,11 +13,11 @@ class Server(flask.Flask):
 
 app = Server('Lyrics Web App')
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def hello():
     return flask.render_template('index.html')
 
-@app.route('/static/<path:path>')
+@app.route('/static/<path:path>', methods=['GET'])
 def send_static(path):
     split_path = path.split('/')
     path, filename = os.path.join(*split_path[:-1]), split_path[-1]

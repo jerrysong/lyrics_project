@@ -3,12 +3,12 @@ Track favorite words of your favorite artist!
 
 ## This project contains following components:
 1. A Hadoop Cluster. HDFS is used to store raw lyrics and artists data in JSON format.
-2. Hbase. We use Hbase as a persistent database.
-3. Hbase Thrift Server. We use thrift to serialize and diserialize the data flow into / out from Hbase.
-4. Spark. We use Spark to process raw data and save the results into Hbase.
-5. Yarn. We use Yarn as the resource manger and Spark job coordinator of the Hadoop Cluster.
-6. Flask Backend Server. We build a backend server which talks to the Hbase database and answers queries from the front end.
-7. Front End Page. We mainly use Bootstrap and JQuery in the front end.
+2. Hbase. I use Hbase as a persistent database.
+3. Hbase Thrift Server. I use thrift to serialize and diserialize the data flow into / out from Hbase.
+4. Spark. I use Spark to process raw data and save the results into Hbase.
+5. Yarn. I use Yarn as the resource manger and job coordinator of the Hadoop Cluster.
+6. Flask Backend Server. I build a backend server which talks to the Hbase database and answers queries from the front end.
+7. Front End. I use Bootstrap, JQuery and D3.js to power the front end.
 
 ## Dependency
 Please install following software before you proceed.

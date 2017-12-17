@@ -29,12 +29,12 @@ def bulk_insert_words_to_artists_count(partition, trivial_words, column_prefix, 
     """ This function batch insert all (artist, list of (word, count / tfidf)) pairs in
     one partition to the Hbase database.
 
-    A word in this context can be a single word, a 2-gram word tuple or a 3-gram word tuple. Each
-    Hbase table contains six column families: column family with all words' count, column family
-    with all words' tfidf, column family with top 10 frequent words' count, column family with
+    A word in this context can be a single word, or a 2-gram word tuple. Each Hbase table
+    contains six column families: column family with all words' count, column family with
+    all words' tfidf, column family with top 10 frequent words' count, column family with
     top 10 frequent words' tfidf, column family with top 10 nontrival frequent words' count,
-    column family with top 10 frequent nontrival words' tfidf. A word is considered trival if it
-    is found in a predefined trival words set.
+    column family with top 10 frequent nontrival words' tfidf. A word is considered trival
+    if it is found in a predefined trival words set.
     """
     batch = happybase.Connection(constants.HBASE_THRIFT_HOST, constants.HBASE_PORT) \
                      .table(table_name).batch(batch_size = 1000)
@@ -42,7 +42,7 @@ def bulk_insert_words_to_artists_count(partition, trivial_words, column_prefix, 
     for artist_name, word_counts in partition:
         count_data = { '%s:%s' % (column_prefix, word):count for word, count in word_counts }
 
-        top_words = heapq.nlargest(110, count_data.iteritems(), key=lambda t:float(t[1]))
+        top_words = heapq.nlargest(210, count_data.iteritems(), key=lambda t:float(t[1]))
         for word, count in top_words[:10]:
             count_data['top_10_%s' % (word,)] = count
 
