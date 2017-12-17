@@ -15,4 +15,4 @@ export NGINX_HOME=/usr/local/nginx
 export LD_LIBRARY_PATH=$HADOOP_HOME/lib/native
 export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$MAVEN_HOME/bin:$HBASE_HOME/bin:$SPARK_HOME/sbin:$NGINX_HOME/sbin
 export PROD=/root/lyrics_project
-export PYTHONPATH=$PYTHONPATH:$PROD/common
+export PYTHONPATH=$PYTHONPATH:$PROD/common:$PROD/scripts/pyspark

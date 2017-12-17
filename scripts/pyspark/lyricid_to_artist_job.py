@@ -5,7 +5,7 @@ import pyspark.conf
 import pyspark.context
 import happybase
 
-APP_NAME = 'artists_job'
+APP_NAME = 'lyricid_to_artist_job'
 
 def load_and_extract(line):
     line_json = json.loads(line.strip())

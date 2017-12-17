@@ -37,7 +37,8 @@ To start the cluster, run following scripts:
 Before running spark jobs, please download raw data from s3://w251lyrics-project/lyric.json.gz and s3://w251lyrics-project/full_US.json.gz. Save them to HDFS `/resources/raw_data` directory as `raw_lyrics.txt` and `raw_artists.txt` respectively. Export environment variables by `source ~/lyrics_project/scripts/env_setup.sh`.
 
     sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 9 --executor-memory 8G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/artists_job.py
-    sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 12 --executor-memory 6G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/lyrics_job.py
+    sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 12 --executor-memory 6G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/corpus_word_count_job.py
+    sh /usr/local/spark/bin/spark-submit --master yarn --deploy-mode cluster --num-executors 12 --executor-memory 6G --verbose --py-files /root/lyrics_project/common/constants.py /root/lyrics_project/scripts/pyspark/artist_to_word_count_job.py
 
 ## Start Web Server:
 Please checkout this project from github and cd to the `lyrics_project/app` directory. Start the web server in background.

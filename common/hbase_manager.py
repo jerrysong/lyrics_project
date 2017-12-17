@@ -40,16 +40,14 @@ class HBaseManager(object):
         return connection.table(table)
 
     def create_word_count_tables(self):
-        hbase.get_artists_to_word_count_table(constants.SINGLE_WORD_ARTISTS_WORDS_COUNT_TABLE)
-        hbase.get_word_count_table(constants.SINGLE_WORD_CORPUS_WORDS_COUNT_TABLE)
+        self.get_artists_to_word_count_table(constants.SINGLE_WORD_ARTISTS_WORDS_COUNT_TABLE)
+        self.get_word_count_table(constants.SINGLE_WORD_CORPUS_WORDS_COUNT_TABLE)
+        self.get_word_count_table(constants.SINGLE_WORD_MOST_FREQUENT_WORDS_TABLE)
 
     def create_two_gram_count_table(self):
-        hbase.get_artists_to_word_count_table(constants.TWO_GRAM_ARTISTS_WORDS_COUNT_TABLE)
-        hbase.get_word_count_table(constants.TWO_GRAM_CORPUS_WORDS_COUNT_TABLE)
-
-    def create_three_gram_count_table(self):
-        hbase.get_artists_to_word_count_table(constants.THREE_GRAM_ARTISTS_WORDS_COUNT_TABLE)
-        hbase.get_word_count_table(constants.THREE_GRAM_CORPUS_WORDS_COUNT_TABLE)
+        self.get_artists_to_word_count_table(constants.TWO_GRAM_ARTISTS_WORDS_COUNT_TABLE)
+        self.get_word_count_table(constants.TWO_GRAM_CORPUS_WORDS_COUNT_TABLE)
+        self.get_word_count_table(constants.TWO_GRAM_MOST_FREQUENT_WORDS_TABLE)
 
     def get_top_10_by_cnt_by_artist_name(self, name):
         artist = 'artists:' + name
@@ -70,4 +68,3 @@ if __name__ == "__main__":
     hbase.get_lyrics_to_artists_table()
     hbase.create_word_count_tables()
     hbase.create_two_gram_count_table()
-    hbase.create_three_gram_count_table()
