@@ -34,7 +34,7 @@ $(function() {
             contentType: "application/json",
             success: function(result){
                 Object.keys(result).forEach(function(key) {
-                    normalize(result[key]);
+                    normalize(result[key], getFontSize(key));
                 });
                 currentData = result;
 
@@ -73,6 +73,19 @@ function getDataToShow(currentMode, currentData) {
         words = [];
     }
     return words;
+}
+
+function getFontSize(key) {
+    switch (key) {
+        case TOP_SINGLE_WORD:
+            return 95;
+        case TOP_SINGLE_WORD_TFIDF:
+            return 50;
+        case TOP_TWO_GRAM_WORD:
+            return 50;
+        case TOP_TWO_GRAM_WORD_TFIDF:
+            return 40;
+    }
 }
 
 function updateTable(words) {
@@ -118,7 +131,9 @@ function updateWordCloud(words) {
     d3.layout.cloud().size([750, 400])
              .words(words)
              .rotate(0)
+             .text(function(d) { return d.text; })
              .fontSize(function(d) { return d.size; })
+             .padding(10)
              .on("end", draw)
              .start();
 }
@@ -134,6 +149,7 @@ function draw(words) {
        .style("font-size", function(d) { return d.size + "px"; })
        .style("font-family", "Impact")
        .style("fill", function(d, i) { return fill(i); })
+       .attr("text-anchor", "middle")
        .attr("transform", function(d) {
            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
        })
@@ -144,6 +160,7 @@ function draw(words) {
        .style("font-size", function(d) { return d.size + "px"; })
        .style("font-family", "Impact")
        .style("fill", function(d, i) { return fill(i); })
+       .attr("text-anchor", "middle")
        .attr("transform", function(d) {
            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
        })
@@ -163,9 +180,9 @@ function findMax(words) {
     return hiBound;
 }
 
-function normalize(words) {
+function normalize(words, fontSize) {
     var hiBound = findMax(words);
     for (var i=0; i<words.length; i++) {
-        words[i]["size"] = words[i].value * (80 / hiBound);
+        words[i]["size"] = words[i].value * (fontSize / hiBound);
     }
 }

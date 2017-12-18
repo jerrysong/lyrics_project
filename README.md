@@ -14,15 +14,14 @@ Track favorite words of your favorite artist!
 Please install following software before you proceed.
 
     yum install python-devel
-    yum install nodejs
 
     pip install happybase
     pip install pyspark
     pip install flask
     pip install raven
     pip install numpy
+    pip install gunicorn
 
-    npm install -g forever
 
 ## Build the Cluster
 Please refer to the official documentation of Hadoop, Spark and Hbase regarding how to build a cluster. This project uses the latest version of them. Please install them in `/usr/local` directory.
@@ -47,4 +46,4 @@ Before running spark jobs, please download raw data from s3://w251lyrics-project
 ## Start Web Server:
 Please checkout this project from github and cd to the `lyrics_project/app` directory. Start the web server in background.
 
-    forever start -c python server.py
+    gunicorn -w 4 -b <host_ip_address>:80 server:app -D
