@@ -107,7 +107,7 @@ label.radio-container {
     background: white;
 }
 
-@media (min-width: 1800px) {
+@media (min-width: 1500px) {
     body {
         padding-top: 56px;
     }
