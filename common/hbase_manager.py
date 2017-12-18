@@ -74,7 +74,9 @@ class HBaseManager(object):
         return ret
 
     def normalize_count_row(self, row):
-        return [{'text': key.split(':', 1)[1], 'value': int(float(value))} for key, value in row.iteritems()]
+        ret = [{'text': key.split(':', 1)[1], 'value': int(float(value))} for key, value in row.iteritems()]
+        ret.sort(key=lambda d: d['value'], reverse=True)
+        return ret
 
 if __name__ == "__main__":
     hbase = HBaseManager()
