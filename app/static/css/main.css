@@ -17,10 +17,13 @@ td {
 footer {
     display: table;
     text-align: center;
-    margin-left: auto;
-    margin-right: auto;
     color: #8f8f8f;
     font-size: 14px;
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .top-buffer {
@@ -111,6 +114,18 @@ label.radio-container {
 
     table {
         margin-top: 20px;
+    }
+
+    footer {
+        display: table;
+        text-align: center;
+        color: #8f8f8f;
+        font-size: 14px;
+        position: fixed;
+        bottom: 0px;
+        left: 0px;
+        width: 100%;
+        margin-bottom: 25px;
     }
 
     .intro-heading {
