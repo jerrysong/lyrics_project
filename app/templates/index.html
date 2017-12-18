@@ -8,8 +8,6 @@
     <title>Lyric Word Web App</title>
     <!-- Bootstrap core CSS -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://www.w3schools.com/w3css/4/w3.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet">
     <link href="static/css/main.css" rel="stylesheet">
 </head>
 
@@ -28,9 +26,6 @@
                             <span class="sr-only">(current)</span>
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
-                    </li>
                 </ul>
             </div>
         </div>
@@ -40,7 +35,7 @@
     <div class="container">
         <div class="row top-buffer">
             <div class="col-lg-12 text-center">
-                    <div class="intro-heading">See Favorite Words of Your Favorite Artist!</div>
+                    <div class="intro-heading">Checkout Favorite Words of Your Favorite Artist!</div>
                     <p class="intro-note "><span class="section-note">Note: </span>Please view this website on Chrome. It may not function properly on other browsers.</p>
             </div>
         </div>
@@ -57,11 +52,39 @@
             <div class="col-lg-4"></div>
         </div>
         <div class="row top-buffer">
+            <div class="col-lg-2"></div>
+            <div class="col-lg-2">
+                <label class="radio-container">Word Count
+                    <input type="radio" checked="checked" name="radio" value="single_word_count_mode">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="col-lg-2">
+                <label class="radio-container">Word TF-IDF
+                    <input type="radio" name="radio" value="single_word_tfidf_mode">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="col-lg-2">
+                <label class="radio-container">Two Gram Count
+                    <input type="radio" name="radio" value="two_gram_count_mode">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="col-lg-2">
+                <label class="radio-container">Two Gram TF-IDF
+                    <input type="radio" name="radio" value="two_gram_tfidf_mode">
+                    <span class="checkmark"></span>
+                </label>
+            </div>
+            <div class="col-lg-2"></div>
+        </div>
+        <div class="row top-buffer">
             <div class="col-lg-10">
                 <svg id="visual"></svg>
             </div>
             <div class="col-lg-2">
-                <table class="table" align="center" id="table">
+                <table align="center" id="table">
                     <thead>
                         <tr>
                             <th class="text-center hidden">Word</th>
@@ -71,6 +94,13 @@
                     <tbody>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div class="row">
+            <div class="col-lg-12">
+                <footer>&copy; Copyright 2017 Jerry Song</footer>
             </div>
         </div>
     </div>

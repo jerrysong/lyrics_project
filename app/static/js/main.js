@@ -1,6 +1,14 @@
 "use strict";
 
 const BACKEND_END_POINT = "http://50.23.83.252:80/get_top_words_by_artist";
+const TOP_SINGLE_WORD = "top_single_word";
+const TOP_SINGLE_WORD_TFIDF = "top_single_word_tfidf";
+const TOP_TWO_GRAM_WORD = "top_two_gram_word";
+const TOP_TWO_GRAM_WORD_TFIDF = "top_two_gram_word_tfidf";
+const WORD_COUNT_MODE = "single_word_count_mode";
+const WORD_TFIDF_MODE = "single_word_tfidf_mode";
+const TWO_GRAM_COUNT_MODE = "two_gram_count_mode";
+const TWO_GRAM_TFIDF_MODE = "two_gram_tfidf_mode";
 
 $(function() {
     d3.select("#visual")
@@ -8,6 +16,9 @@ $(function() {
       .attr("height", 500)
       .append("g")
       .attr("transform", "translate(300,200)");
+
+    var currentMode = WORD_COUNT_MODE;
+    var currentData = {};
 
     $("#search-btn").on("click", function() {
         var artistName = $("#search-input").val();
@@ -22,25 +33,57 @@ $(function() {
             dataType: "json",
             contentType: "application/json",
             success: function(result){
-                console.log(JSON.stringify(result));
-                var words = result["top_single_word"];
-                normalize(words);
-                updateTable(words)
+                Object.keys(result).forEach(function(key) {
+                    normalize(result[key]);
+                });
+                currentData = result;
+
+                var words = getDataToShow(currentMode, currentData);
+                updateTable(words);
                 updateWordCloud(words);
             }
         });
     });
+
+    $("input[type=radio][name=radio]").change(function() {
+        currentMode = this.value;
+        var words = getDataToShow(currentMode, currentData);
+        updateTable(words);
+        updateWordCloud(words);
+    });
 });
+
+function getDataToShow(currentMode, currentData) {
+    var words;
+    switch (currentMode) {
+        case WORD_COUNT_MODE:
+            words = currentData[TOP_SINGLE_WORD];
+            break;
+        case WORD_TFIDF_MODE:
+            words = currentData[TOP_SINGLE_WORD_TFIDF];
+            break;
+        case TWO_GRAM_COUNT_MODE:
+            words = currentData[TOP_TWO_GRAM_WORD];
+            break;
+        case TWO_GRAM_TFIDF_MODE:
+            words = currentData[TOP_TWO_GRAM_WORD_TFIDF];
+            break;
+    }
+    if (typeof words == "undefined") {
+        words = [];
+    }
+    return words;
+}
 
 function updateTable(words) {
     var headers = d3.select("table")
                     .select("thead")
                     .select("tr")
                     .selectAll("th");
-    if (words.length > 0) {
-        headers.classed("hidden", false);
-    } else {
+    if (words.length == 0) {
         headers.classed("hidden", true);
+    } else {
+        headers.classed("hidden", false);
     }
 
     var rows = d3.select("table")

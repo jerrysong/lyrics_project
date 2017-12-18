@@ -56,13 +56,13 @@ class HBaseManager(object):
         top_10_nontrival_words = single_word_table.row(artist, ('top_10_nontrival_words',))
         top_10_nontrival_words =  self.normalize_count_row(top_10_nontrival_words)
         top_10_nontrival_words_tf_idf = single_word_table.row(artist, ('top_10_nontrival_words_tf_idf',))
-        top_10_nontrival_words_tf_idf = self.normalize_count_row(top_10_nontrival_words_tf_idf)
+        top_10_nontrival_words_tf_idf = self.normalize_tfidf_row(top_10_nontrival_words_tf_idf)
 
         two_gram_word_table = self.get_artists_to_word_count_table(constants.TWO_GRAM_ARTISTS_WORDS_COUNT_TABLE)
         top_10_nontrival_two_gram_words = two_gram_word_table.row(artist, ('top_10_nontrival_words',))
         top_10_nontrival_two_gram_words = self.normalize_count_row(top_10_nontrival_two_gram_words)
         top_10_nontrival_two_gram_words_tf_idf = two_gram_word_table.row(artist, ('top_10_nontrival_words_tf_idf',))
-        top_10_nontrival_two_gram_words_tf_idf = self.normalize_count_row(top_10_nontrival_two_gram_words_tf_idf)
+        top_10_nontrival_two_gram_words_tf_idf = self.normalize_tfidf_row(top_10_nontrival_two_gram_words_tf_idf)
 
         ret = {
             'top_single_word': top_10_nontrival_words,
@@ -75,6 +75,11 @@ class HBaseManager(object):
 
     def normalize_count_row(self, row):
         ret = [{'text': key.split(':', 1)[1], 'value': int(float(value))} for key, value in row.iteritems()]
+        ret.sort(key=lambda d: d['value'], reverse=True)
+        return ret
+
+    def normalize_tfidf_row(self, row):
+        ret = [{'text': key.split(':', 1)[1], 'value': int(float(value) / 1000)} for key, value in row.iteritems()]
         ret.sort(key=lambda d: d['value'], reverse=True)
         return ret
 
