@@ -78,11 +78,11 @@ function getDataToShow(currentMode, currentData) {
 function getFontSize(key) {
     switch (key) {
         case TOP_SINGLE_WORD:
-            return 95;
+            return 80;
         case TOP_SINGLE_WORD_TFIDF:
-            return 50;
+            return 70;
         case TOP_TWO_GRAM_WORD:
-            return 50;
+            return 60;
         case TOP_TWO_GRAM_WORD_TFIDF:
             return 40;
     }
